@@ -14,9 +14,16 @@ class HexController {
 
   String colorToString(Color color) {
     String ret = color.toString().split("Color(0xff")[1];
-    print(color.toString().split("Color(0xff"));
-    print(ret);
     return ret.substring(0, ret.length);
+  }
+
+  Color generateColor(String red, String green, String blue) {
+    try {
+      final colorString = "FF" + red + green + blue;
+      return Color(int.parse(colorString, radix: 16));
+    } catch (e) {
+      throw Exception(e);
+    }
   }
 }
 

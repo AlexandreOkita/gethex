@@ -10,7 +10,22 @@ class GethexGamePage extends StatefulWidget {
 
 class _GethexGamePageState extends State<GethexGamePage> {
   Color _colorState = Colors.yellow;
+  String? _redState;
+  String? _greenState;
+  String? _blueState;
   String userGuess = "";
+
+  setRedState(String? v) => setState(() {
+        _redState = v;
+      });
+
+  setGreenState(String? v) => setState(() {
+        _greenState = v;
+      });
+
+  setBlueState(String? v) => setState(() {
+        _blueState = v;
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -41,13 +56,30 @@ class _GethexGamePageState extends State<GethexGamePage> {
             height: 100,
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 80.0),
-            child: TextField(
-              onChanged: (value) => setState(() {
-                userGuess = value;
-              }),
-            ),
-          ),
+              padding: const EdgeInsets.symmetric(horizontal: 600.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ColorInputCell(
+                    colorTarget: _colorState.red,
+                    baseColor: _redState,
+                    callback: setRedState,
+                    title: 'RED',
+                  ),
+                  ColorInputCell(
+                    colorTarget: _colorState.green,
+                    baseColor: _greenState,
+                    callback: setGreenState,
+                    title: 'GREEN',
+                  ),
+                  ColorInputCell(
+                    colorTarget: _colorState.blue,
+                    baseColor: _blueState,
+                    callback: setBlueState,
+                    title: 'BLUE',
+                  ),
+                ],
+              )),
           const SizedBox(
             height: 100,
           ),
@@ -78,6 +110,59 @@ class _GethexGamePageState extends State<GethexGamePage> {
                   ))
         ],
       ),
+    );
+  }
+}
+
+class ColorInputCell extends StatelessWidget {
+  final String? baseColor;
+  final int colorTarget;
+  final Function(String?) callback;
+  final String title;
+  const ColorInputCell(
+      {Key? key,
+      required this.baseColor,
+      required this.colorTarget,
+      required this.callback,
+      required this.title})
+      : super(key: key);
+
+  Widget colorComparation(String baseColor, int targetColor) {
+    try {
+      final intBaseColor = int.parse(baseColor, radix: 16);
+      if (intBaseColor < targetColor) {
+        return const Icon(Icons.arrow_downward);
+      }
+      if (intBaseColor > targetColor) {
+        return const Icon(Icons.arrow_upward);
+      }
+      return const Icon(Icons.check);
+    } catch (e) {
+      return const Icon(Icons.clear);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(title),
+        const SizedBox(
+          height: 8,
+        ),
+        SizedBox(
+          child: TextField(
+            onChanged: callback,
+            decoration: const InputDecoration(counterText: ""),
+            maxLength: 2,
+          ),
+          width: 20,
+        ),
+        const SizedBox(
+          height: 8,
+        ),
+        colorComparation(baseColor ?? "00", colorTarget)
+      ],
     );
   }
 }
