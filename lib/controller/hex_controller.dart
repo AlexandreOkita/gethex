@@ -25,6 +25,16 @@ class HexController {
       throw Exception(e);
     }
   }
+
+  bool isIntCloseEnough(int base, int target) {
+    return (base - target).abs() < 10;
+  }
+
+  bool isColorCloseEnough(Color baseColor, Color targetColor) {
+    return isIntCloseEnough(baseColor.red, targetColor.red) &&
+        isIntCloseEnough(baseColor.green, targetColor.green) &&
+        isIntCloseEnough(baseColor.blue, targetColor.blue);
+  }
 }
 
 void main() {

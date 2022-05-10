@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:gethex/main.dart';
 
 class GethexGamePage extends StatefulWidget {
@@ -13,7 +14,9 @@ class _GethexGamePageState extends State<GethexGamePage> {
   String? _redState;
   String? _greenState;
   String? _blueState;
-  String userGuess = "";
+  Color? userGuess;
+  int guessCounter = 0;
+  final _formKey = GlobalKey<FormState>();
 
   setRedState(String? v) => setState(() {
         _redState = v;
@@ -27,87 +30,135 @@ class _GethexGamePageState extends State<GethexGamePage> {
         _blueState = v;
       });
 
+  resetGame() => setState(() {
+        _formKey.currentState!.reset();
+        guessCounter = 0;
+        _redState = null;
+        _greenState = null;
+        _blueState = null;
+        _colorState = hexController.getRandomColor();
+        userGuess = null;
+        print(_colorState);
+      });
+
   @override
   Widget build(BuildContext context) {
+    final screen = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(title: const Text("Guess The Color Hex!")),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(
-            height: 20,
-          ),
-          Container(
-            height: 400,
-            width: 400,
-            color: _colorState,
-          ),
-          const SizedBox(
-            height: 100,
-          ),
-          ElevatedButton(
-            onPressed: (() => setState(() {
-                  _colorState = hexController.getRandomColor();
-                  print(_colorState);
-                })),
-            child: const Text("Random Color"),
-          ),
-          const SizedBox(
-            height: 100,
+          SizedBox(
+            height: screen.height * 0.05,
           ),
           Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 600.0),
+            padding: EdgeInsets.symmetric(horizontal: screen.width * 0.2),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Container(
+                  height: 300,
+                  width: 300,
+                  color: _colorState,
+                ),
+                Column(
+                  children: [
+                    const Text(
+                      "Trials",
+                      style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(
+                      height: 100,
+                    ),
+                    Text(guessCounter.toString(), style: const TextStyle(fontSize: 36)),
+                  ],
+                )
+              ],
+            ),
+          ),
+          SizedBox(
+            height: screen.height * 0.05,
+          ),
+          ElevatedButton(
+            onPressed: () => resetGame(),
+            child: const Text("Random Color"),
+          ),
+          SizedBox(
+            height: screen.height * 0.1,
+          ),
+          Padding(
+              padding: EdgeInsets.symmetric(horizontal: screen.width * 0.3),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  ColorInputCell(
-                    colorTarget: _colorState.red,
-                    baseColor: _redState,
-                    callback: setRedState,
-                    title: 'RED',
+                  Form(
+                    key: _formKey,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ColorInputCell(
+                          colorTarget: _colorState.red,
+                          baseColor: _redState,
+                          callback: setRedState,
+                          title: 'R',
+                        ),
+                        ColorInputCell(
+                          colorTarget: _colorState.green,
+                          baseColor: _greenState,
+                          callback: setGreenState,
+                          title: 'G',
+                        ),
+                        ColorInputCell(
+                          colorTarget: _colorState.blue,
+                          baseColor: _blueState,
+                          callback: setBlueState,
+                          title: 'B',
+                        ),
+                      ],
+                    ),
                   ),
-                  ColorInputCell(
-                    colorTarget: _colorState.green,
-                    baseColor: _greenState,
-                    callback: setGreenState,
-                    title: 'GREEN',
-                  ),
-                  ColorInputCell(
-                    colorTarget: _colorState.blue,
-                    baseColor: _blueState,
-                    callback: setBlueState,
-                    title: 'BLUE',
-                  ),
+                  userGuess != null
+                      ? Container(
+                          color: userGuess,
+                          height: 100,
+                          width: 100,
+                        )
+                      : Container()
                 ],
               )),
-          const SizedBox(
-            height: 100,
+          SizedBox(
+            height: screen.height * 0.1,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: Iterable.generate(userGuess.length).map((charPos) {
-              if (charPos <= 6) {
-                return StatusSquare(
-                  isOk: hexController.colorToString(_colorState)[charPos] == userGuess[charPos],
-                );
-              }
-              return const StatusSquare(
-                isOk: false,
-              );
-            }).toList(),
-          ),
-          const SizedBox(
-            height: 25,
-          ),
-          hexController.isStringEqualColor(userGuess, _colorState)
-              ? const Text(
-                  "Correct!",
-                  style: TextStyle(color: Colors.green),
-                )
-              : const Text("Wrong",
-                  style: TextStyle(
-                    color: Colors.red,
-                  ))
+          ElevatedButton(
+              onPressed: () {
+                try {
+                  setState(() {
+                    _formKey.currentState!.save();
+                    userGuess = hexController.generateColor(
+                      _redState ?? "00",
+                      _greenState ?? "00",
+                      _blueState ?? "00",
+                    );
+                    if (hexController.isColorCloseEnough(userGuess!, _colorState)) {
+                      showDialog(
+                          context: context,
+                          builder: (context) => WinScreen(
+                                resetCallback: resetGame,
+                                score: guessCounter,
+                                correctColor: _colorState,
+                                guessedColor: userGuess!,
+                              ));
+                    }
+                    guessCounter += 1;
+                  });
+                } catch (e) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(const SnackBar(content: Text("Can't generate the color!")));
+                }
+              },
+              child: const Text("Guess!")),
         ],
       ),
     );
@@ -127,8 +178,11 @@ class ColorInputCell extends StatelessWidget {
       required this.title})
       : super(key: key);
 
-  Widget colorComparation(String baseColor, int targetColor) {
+  Widget colorComparation(String? baseColor, int targetColor) {
     try {
+      if (baseColor == null) {
+        return Container();
+      }
       final intBaseColor = int.parse(baseColor, radix: 16);
       if (intBaseColor < targetColor) {
         return const Icon(Icons.arrow_downward);
@@ -151,8 +205,8 @@ class ColorInputCell extends StatelessWidget {
           height: 8,
         ),
         SizedBox(
-          child: TextField(
-            onChanged: callback,
+          child: TextFormField(
+            onSaved: callback,
             decoration: const InputDecoration(counterText: ""),
             maxLength: 2,
           ),
@@ -161,7 +215,7 @@ class ColorInputCell extends StatelessWidget {
         const SizedBox(
           height: 8,
         ),
-        colorComparation(baseColor ?? "00", colorTarget)
+        colorComparation(baseColor, colorTarget)
       ],
     );
   }
@@ -180,6 +234,56 @@ class StatusSquare extends StatelessWidget {
         height: 10,
         width: 10,
         color: isOk ? Colors.green : Colors.red,
+      ),
+    );
+  }
+}
+
+class WinScreen extends StatelessWidget {
+  final void Function() resetCallback;
+  final int score;
+  final Color guessedColor;
+  final Color correctColor;
+
+  const WinScreen({
+    Key? key,
+    required this.resetCallback,
+    required this.score,
+    required this.correctColor,
+    required this.guessedColor,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          width: MediaQuery.of(context).size.width * 0.7,
+          child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  "You won!",
+                  style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "Number of Trials: $score",
+                  style: const TextStyle(
+                    fontSize: 36,
+                  ),
+                ),
+                Text("Correct color: ${correctColor.toString()}"),
+                Text("Your guess: ${guessedColor.toString()}"),
+                ElevatedButton(
+                    onPressed: () {
+                      resetCallback();
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Reset Game"))
+              ]),
+        ),
       ),
     );
   }
