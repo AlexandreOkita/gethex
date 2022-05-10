@@ -10,7 +10,7 @@ class GethexGamePage extends StatefulWidget {
 }
 
 class _GethexGamePageState extends State<GethexGamePage> {
-  Color _colorState = Colors.yellow;
+  Color _colorState = hexController.getRandomColor();
   String? _redState;
   String? _greenState;
   String? _blueState;
@@ -45,23 +45,17 @@ class _GethexGamePageState extends State<GethexGamePage> {
   Widget build(BuildContext context) {
     final screen = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(title: const Text("Guess The Color Hex!")),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            height: screen.height * 0.05,
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: screen.width * 0.2),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: screen.height * 0.05,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Container(
-                  height: 300,
-                  width: 300,
-                  color: _colorState,
-                ),
+                ColorSquare(color: _colorState, text: "Guess the Color Hex!"),
                 Column(
                   children: [
                     const Text(
@@ -73,93 +67,78 @@ class _GethexGamePageState extends State<GethexGamePage> {
                     ),
                     Text(guessCounter.toString(), style: const TextStyle(fontSize: 36)),
                   ],
-                )
+                ),
+                ColorSquare(color: userGuess ?? Colors.black, text: "Your Guess"),
               ],
             ),
-          ),
-          SizedBox(
-            height: screen.height * 0.05,
-          ),
-          ElevatedButton(
-            onPressed: () => resetGame(),
-            child: const Text("Random Color"),
-          ),
-          SizedBox(
-            height: screen.height * 0.1,
-          ),
-          Padding(
-              padding: EdgeInsets.symmetric(horizontal: screen.width * 0.3),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Form(
-                    key: _formKey,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ColorInputCell(
-                          colorTarget: _colorState.red,
-                          baseColor: _redState,
-                          callback: setRedState,
-                          title: 'R',
-                        ),
-                        ColorInputCell(
-                          colorTarget: _colorState.green,
-                          baseColor: _greenState,
-                          callback: setGreenState,
-                          title: 'G',
-                        ),
-                        ColorInputCell(
-                          colorTarget: _colorState.blue,
-                          baseColor: _blueState,
-                          callback: setBlueState,
-                          title: 'B',
-                        ),
-                      ],
-                    ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: screen.width * 0.2),
+            ),
+            SizedBox(
+              height: screen.height * 0.1,
+            ),
+            Padding(
+                padding: EdgeInsets.symmetric(horizontal: screen.width * 0.3),
+                child: Form(
+                  key: _formKey,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ColorInputCell(
+                        colorTarget: _colorState.red,
+                        baseColor: _redState,
+                        callback: setRedState,
+                        title: 'RED',
+                      ),
+                      ColorInputCell(
+                        colorTarget: _colorState.green,
+                        baseColor: _greenState,
+                        callback: setGreenState,
+                        title: 'GREEN',
+                      ),
+                      ColorInputCell(
+                        colorTarget: _colorState.blue,
+                        baseColor: _blueState,
+                        callback: setBlueState,
+                        title: 'BLUE',
+                      ),
+                    ],
                   ),
-                  userGuess != null
-                      ? Container(
-                          color: userGuess,
-                          height: 100,
-                          width: 100,
-                        )
-                      : Container()
-                ],
-              )),
-          SizedBox(
-            height: screen.height * 0.1,
-          ),
-          ElevatedButton(
-              onPressed: () {
-                try {
-                  setState(() {
-                    _formKey.currentState!.save();
-                    userGuess = hexController.generateColor(
-                      _redState ?? "00",
-                      _greenState ?? "00",
-                      _blueState ?? "00",
-                    );
-                    if (hexController.isColorCloseEnough(userGuess!, _colorState)) {
-                      showDialog(
-                          context: context,
-                          builder: (context) => WinScreen(
-                                resetCallback: resetGame,
-                                score: guessCounter,
-                                correctColor: _colorState,
-                                guessedColor: userGuess!,
-                              ));
-                    }
-                    guessCounter += 1;
-                  });
-                } catch (e) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(const SnackBar(content: Text("Can't generate the color!")));
-                }
-              },
-              child: const Text("Guess!")),
-        ],
+                )),
+            SizedBox(
+              height: screen.height * 0.1,
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  try {
+                    setState(() {
+                      _formKey.currentState!.save();
+                      userGuess = hexController.generateColor(
+                        _redState ?? "00",
+                        _greenState ?? "00",
+                        _blueState ?? "00",
+                      );
+                      if (hexController.isColorCloseEnough(userGuess!, _colorState)) {
+                        showDialog(
+                            context: context,
+                            builder: (context) => WinScreen(
+                                  resetCallback: resetGame,
+                                  score: guessCounter,
+                                  correctColor: _colorState,
+                                  guessedColor: userGuess!,
+                                ));
+                      }
+                      guessCounter += 1;
+                    });
+                  } catch (e) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(content: Text("Can't generate the color!")));
+                  }
+                },
+                child: const Text("Guess!")),
+          ],
+        ),
       ),
     );
   }
@@ -185,10 +164,10 @@ class ColorInputCell extends StatelessWidget {
       }
       final intBaseColor = int.parse(baseColor, radix: 16);
       if (intBaseColor < targetColor) {
-        return const Icon(Icons.arrow_downward);
+        return const Icon(Icons.arrow_upward);
       }
       if (intBaseColor > targetColor) {
-        return const Icon(Icons.arrow_upward);
+        return const Icon(Icons.arrow_downward);
       }
       return const Icon(Icons.check);
     } catch (e) {
@@ -206,11 +185,15 @@ class ColorInputCell extends StatelessWidget {
         ),
         SizedBox(
           child: TextFormField(
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 30,
+            ),
             onSaved: callback,
             decoration: const InputDecoration(counterText: ""),
             maxLength: 2,
           ),
-          width: 20,
+          width: 60,
         ),
         const SizedBox(
           height: 8,
@@ -285,6 +268,33 @@ class WinScreen extends StatelessWidget {
               ]),
         ),
       ),
+    );
+  }
+}
+
+class ColorSquare extends StatelessWidget {
+  final Color color;
+  final String text;
+
+  const ColorSquare({required this.color, Key? key, required this.text}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          height: 300,
+          width: 300,
+          color: color,
+        ),
+        const SizedBox(
+          height: 32,
+        ),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 36, fontWeight: FontWeight.normal),
+        )
+      ],
     );
   }
 }
