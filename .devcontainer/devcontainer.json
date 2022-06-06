@@ -1,0 +1,13 @@
+{
+	"name": "Dart (Community)",
+	"image": "cirrusci/flutter",
+
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"dart-code.dart-code",
+		"akamud.vscode-theme-onedark",
+		"PKief.material-icon-theme"
+	],
+
+	"forwardPorts": [3000]
+}
