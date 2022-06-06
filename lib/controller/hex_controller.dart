@@ -36,7 +36,3 @@ class HexController {
         isIntCloseEnough(baseColor.blue, targetColor.blue);
   }
 }
-
-void main() {
-  final randomHex = Random().nextDouble() * 0xFFFFFF.toInt();
-}
